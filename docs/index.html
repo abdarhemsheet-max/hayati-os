@@ -11,144 +11,206 @@
       background: #0a0a0f;
       color: #e2e8f0;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       padding: 2rem;
       line-height: 1.6;
     }
-    .container {
-      max-width: 640px;
-      text-align: center;
-    }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 3rem; }
     h1 {
-      font-size: 3rem;
-      font-weight: 900;
+      font-size: 3rem; font-weight: 900;
       background: linear-gradient(135deg, #38bdf8, #a78bfa, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       margin-bottom: 0.5rem;
     }
-    .subtitle {
-      font-size: 1.1rem;
-      color: #94a3b8;
-      margin-bottom: 2rem;
-    }
+    .subtitle { color: #94a3b8; font-size: 1.1rem; }
+
     .badge {
-      display: inline-block;
-      padding: 0.35rem 1rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      margin-bottom: 2rem;
+      display: inline-block; padding: 0.35rem 1rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+      background: rgba(56,189,248,0.12); color: #38bdf8;
+      border: 1px solid rgba(56,189,248,0.2);
+      margin: 1rem 0 2rem;
     }
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-      text-align: center;
+
+    .screens {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-bottom: 3rem;
     }
-    .feature {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
-      padding: 1.25rem 1rem;
+    .screen {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; overflow: hidden;
     }
-    .feature .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .feature .name { font-weight: 700; font-size: 0.85rem; }
-    .feature .desc { font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; }
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      justify-content: center;
+    .screen .preview {
+      height: 140px; background: linear-gradient(135deg, rgba(56,189,248,0.08), rgba(167,139,250,0.08));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.06);
     }
+    .screen .info { padding: 1rem; }
+    .screen .info h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .screen .info p { font-size: 0.8rem; color: #64748b; }
+
+    section { margin-bottom: 2.5rem; }
+    section h2 {
+      font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    section h2::before {
+      content: ''; display: inline-block; width: 3px; height: 1.2rem;
+      background: #38bdf8; border-radius: 2px;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 0.75rem; }
+    .step {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem; border-radius: 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .step .num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(56,189,248,0.15); color: #38bdf8;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .step .text { flex: 1; }
+    .step .text p { font-size: 0.85rem; color: #94a3b8; margin-top: 0.2rem; }
+    .code {
+      display: inline-block; padding: 0.2rem 0.5rem;
+      background: rgba(255,255,255,0.06); border-radius: 4px;
+      font-family: monospace; font-size: 0.8rem; direction: ltr;
+    }
+
+    .links { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 2rem; }
     .links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.65rem 1.5rem;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-      border: 1px solid rgba(255,255,255,0.08);
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.65rem 1.5rem; border-radius: 12px;
+      font-size: 0.85rem; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08);
     }
     .links a.primary {
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; border: none;
     }
     .links a.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(56,189,248,0.25); }
-    .links a.secondary {
-      background: rgba(255,255,255,0.05);
-      color: #e2e8f0;
-    }
+    .links a.secondary { background: rgba(255,255,255,0.05); color: #e2e8f0; }
     .links a.secondary:hover { background: rgba(255,255,255,0.1); }
-    .footer {
-      margin-top: 3rem;
-      font-size: 0.75rem;
-      color: #475569;
-    }
+    .links a.green { background: rgba(52,211,153,0.12); color: #34d399; border-color: rgba(52,211,153,0.2); }
+    .links a.green:hover { background: rgba(52,211,153,0.2); }
+
+    .footer { text-align: center; margin-top: 3rem; font-size: 0.75rem; color: #475569; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>نظام حياتي</h1>
-    <p class="subtitle">Hayati OS — نظام شخصي متكامل لإدارة الحياة</p>
-    <span class="badge">v2.0.0 · محلي 100%</span>
+    <header>
+      <h1>نظام حياتي</h1>
+      <p class="subtitle">Hayati OS — نظام شخصي متكامل لإدارة الحياة</p>
+      <div class="badge">v2.0.0 · Next.js 14 · Supabase + Backblaze B2</div>
+    </header>
 
-    <div class="features">
-      <div class="feature">
-        <div class="icon">💰</div>
-        <div class="name">المالية</div>
-        <div class="desc">محافظ، ديون، اشتراكات، أهداف</div>
+    <section>
+      <h2>الواجهات (الـ 9 أقسام)</h2>
+      <div class="screens">
+        <div class="screen">
+          <div class="preview">💰</div>
+          <div class="info"><h3>المالية</h3><p>محافظ، ديون، اشتراكات، أهداف</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">✅</div>
+          <div class="info"><h3>المهام والعادات</h3><p>مهام يومية، عادات، تركيز أسبوعي</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">💼</div>
+          <div class="info"><h3>المشاريع</h3><p>مشاريع محدودة ومستمرة</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">📄</div>
+          <div class="info"><h3>التقارير</h3><p>تقارير مؤتمتة ويدوية مع PDF</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">📁</div>
+          <div class="info"><h3>المستندات</h3><p>أرشيف PDF عبر Backblaze + Supabase</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">📖</div>
+          <div class="info"><h3>القرآن</h3><p>حصون، شنقيطية، SRS، مصحف</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">🎓</div>
+          <div class="info"><h3>التعلم</h3><p>كورسات وكتب مع دروس</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">🔄</div>
+          <div class="info"><h3>التعافي</h3><p>تتبع الالتزام اليومي</p></div>
+        </div>
+        <div class="screen">
+          <div class="preview">🏠</div>
+          <div class="info"><h3>الرئيسية</h3><p>ملخص سريع لكل الأقسام</p></div>
+        </div>
       </div>
-      <div class="feature">
-        <div class="icon">✅</div>
-        <div class="name">المهام والعادات</div>
-        <div class="desc">مهام يومية، عادات، تركيز أسبوعي</div>
+    </section>
+
+    <section>
+      <h2>التشغيل محلياً</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="text">
+            <strong>حمّل الكود</strong>
+            <p><span class="code">git clone https://github.com/abdarhemsheet-max/hayati-os.git</span></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="text">
+            <strong>ثبّت الحزم وشغّل</strong>
+            <p><span class="code">npm install && npx prisma db push && npm run build && npm start</span></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="text">
+            <strong>افتح المتصفح</strong>
+            <p>على <span class="code">http://localhost:4400</span></p>
+          </div>
+        </div>
       </div>
-      <div class="feature">
-        <div class="icon">📂</div>
-        <div class="name">المشاريع</div>
-        <div class="desc">مشاريع محدودة ومستمرة</div>
+    </section>
+
+    <section>
+      <h2>النشر أونلاين (Vercel)</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="text">
+            <strong>اربط المستودع مع Vercel</strong>
+            <p>من dashboard.vercel.com → New Project → استيراد hayati-os</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="text">
+            <strong>ضف المتغيرات البيئية</strong>
+            <p><span class="code">DATABASE_URL</span> (PostgreSQL من Supabase)، <span class="code">SUPABASE_URL</span>، <span class="code">SUPABASE_SERVICE_KEY</span>، <span class="code">B2_KEY_ID</span>، <span class="code">B2_APPLICATION_KEY</span>، <span class="code">B2_BUCKET_NAME</span>، <span class="code">B2_ENDPOINT</span></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="text">
+            <strong>انشر!</strong>
+            <p>Vercel سيبني وينشر تلقائياً — اضغط Deploy</p>
+          </div>
+        </div>
       </div>
-      <div class="feature">
-        <div class="icon">📄</div>
-        <div class="name">المستندات</div>
-        <div class="desc">أرشيف PDF مع Backblaze + Supabase</div>
-      </div>
-      <div class="feature">
-        <div class="icon">📖</div>
-        <div class="name">القرآن</div>
-        <div class="desc">حصون، شنقيطية، SRS، مصحف</div>
-      </div>
-      <div class="feature">
-        <div class="icon">📚</div>
-        <div class="name">التعلم</div>
-        <div class="desc">كورسات وكتب مع دروس</div>
-      </div>
-    </div>
+    </section>
 
     <div class="links">
-      <a href="https://github.com/abdarhemsheet-max/hayati-os" class="primary">
-        GitHub
-      </a>
-      <a href="https://github.com/abdarhemsheet-max/hayati-os/blob/main/README.md" class="secondary">
-        README
-      </a>
+      <a href="https://github.com/abdarhemsheet-max/hayati-os" class="primary">مستودع GitHub</a>
+      <a href="https://github.com/abdarhemsheet-max/hayati-os/blob/main/README.md" class="secondary">التعليمات الكاملة</a>
+      <a href="https://vercel.com/new/clone?repository-url=https://github.com/abdarhemsheet-max/hayati-os" class="green">انشر على Vercel</a>
     </div>
-    <p class="footer">
-      by عبدالرحيم أحمد شيتة
-    </p>
+
+    <p class="footer">عبدالرحيم أحمد شيتة</p>
   </div>
 </body>
 </html>
