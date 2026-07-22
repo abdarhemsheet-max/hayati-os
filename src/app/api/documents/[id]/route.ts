@@ -1,47 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { prisma } from '@/backend/prisma';
-import { errorResponse, readBody } from '@/backend/resources';
-import { ValidationError, optId, optStr } from '@/backend/validate';
-import { UPLOAD_DIR } from '@/backend/uploads';
+import { supabase } from '@/backend/supabase';
+import { deleteFile } from '@/backend/backblaze';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type Ctx = { params: { id: string } };
 
-/** PATCH /api/documents/[id] — إعادة تسمية أو نقل لمجلد آخر */
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
-    const b = await readBody(req);
-    const data: Record<string, unknown> = {};
-    if (b.name !== undefined) {
-      const name = optStr(b, 'name', 200);
-      if (!name) throw new ValidationError('اسم الملف مطلوب');
-      data.name = name;
-    }
-    if (b.folderId !== undefined) data.folderId = optId(b, 'folderId');
-    if (Object.keys(data).length === 0) throw new ValidationError('لا توجد تعديلات صالحة');
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: 'بيانات الطلب غير صالحة' }, { status: 400 });
 
-    const doc = await prisma.document.update({ where: { id: params.id }, data });
-    return NextResponse.json(doc);
+    const update: Record<string, any> = {};
+    if (body.name !== undefined) {
+      const name = String(body.name).trim();
+      if (!name) return NextResponse.json({ error: 'اسم الملف مطلوب' }, { status: 400 });
+      update.name = name.slice(0, 200);
+    }
+    if (body.folderId !== undefined) {
+      update.folder_id = body.folderId || null;
+    }
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: 'لا توجد تعديلات صالحة' }, { status: 400 });
+    }
+
+    const { error } = await supabase.from('documents').update(update).eq('id', params.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
   } catch (e) {
-    return errorResponse(e);
+    console.error('[DOCUMENTS PATCH ERROR]', e);
+    return NextResponse.json({ error: 'فشل التحديث' }, { status: 500 });
   }
 }
 
-/** DELETE /api/documents/[id] — حذف السجل والملف الفعلي من القرص */
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   try {
-    const doc = await prisma.document.findUnique({ where: { id: params.id } });
-    if (!doc) return NextResponse.json({ ok: true }); // محذوف مسبقاً
+    const { data, error: findErr } = await supabase
+      .from('documents')
+      .select('b2_file_id')
+      .eq('id', params.id)
+      .single();
+    if (findErr || !data) return NextResponse.json({ ok: true });
 
-    await prisma.document.delete({ where: { id: doc.id } });
-    // حذف الملف من القرص — فشله لا يُفشل العملية (السجل حُذف)
-    await fs.unlink(path.join(UPLOAD_DIR, doc.fileName)).catch(() => {});
+    await deleteFile(data.b2_file_id).catch(() => {});
+    await supabase.from('documents').delete().eq('id', params.id);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return errorResponse(e);
+    console.error('[DOCUMENTS DELETE ERROR]', e);
+    return NextResponse.json({ error: 'فشل الحذف' }, { status: 500 });
   }
 }

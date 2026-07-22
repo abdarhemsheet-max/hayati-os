@@ -1,37 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { prisma } from '@/backend/prisma';
-import { errorResponse } from '@/backend/resources';
-import { UPLOAD_DIR } from '@/backend/uploads';
+import { supabase } from '@/backend/supabase';
+import { downloadFile } from '@/backend/backblaze';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/**
- * GET /api/documents/[id]/file — بث الملف داخل التطبيق (inline).
- * هذا ما يتيح فتح PDF داخل عارض النظام دون تحميل أو تبويب جديد.
- */
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const doc = await prisma.document.findUnique({ where: { id: params.id } });
-    if (!doc) return NextResponse.json({ error: 'المستند غير موجود' }, { status: 404 });
+    const { data, error } = await supabase
+      .from('documents')
+      .select('name, mime_type, b2_file_id')
+      .eq('id', params.id)
+      .single();
 
-    const filePath = path.join(UPLOAD_DIR, doc.fileName);
-    const buffer = await fs.readFile(filePath).catch(() => null);
-    if (!buffer) {
-      return NextResponse.json({ error: 'الملف غير موجود على القرص' }, { status: 404 });
+    if (error || !data) {
+      return NextResponse.json({ error: 'المستند غير موجود' }, { status: 404 });
     }
 
-    return new NextResponse(new Uint8Array(buffer), {
+    const result = await downloadFile(data.b2_file_id);
+    if (!result) {
+      return NextResponse.json({ error: 'الملف غير موجود على Backblaze' }, { status: 404 });
+    }
+
+    return new NextResponse(new Uint8Array(result.buffer), {
       headers: {
-        'Content-Type': doc.mimeType,
-        'Content-Length': String(buffer.length),
-        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(doc.name)}`,
+        'Content-Type': data.mime_type,
+        'Content-Length': String(result.buffer.length),
+        'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(data.name)}`,
         'Cache-Control': 'no-store',
       },
     });
   } catch (e) {
-    return errorResponse(e);
+    console.error('[DOCUMENTS FILE GET ERROR]', e);
+    return NextResponse.json({ error: 'فشل تحميل الملف' }, { status: 500 });
   }
 }

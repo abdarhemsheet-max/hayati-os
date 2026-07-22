@@ -43,7 +43,7 @@ interface StagedFile {
 }
 
 export default function DocumentsPage() {
-  const [folders, setFolders] = useState<DocFolder[]>(() => getCached<DocFolder[]>('/api/crud/folders') ?? []);
+  const [folders, setFolders] = useState<DocFolder[]>(() => getCached<DocFolder[]>('/api/folders') ?? []);
   const [docs, setDocs] = useState<Document[]>(() => getCached<Document[]>('/api/documents') ?? []);
   const [activeFolder, setActiveFolder] = useState<string | 'all'>('all');
   const [modal, setModal] = useState<null | 'folder'>(null);
@@ -55,7 +55,7 @@ export default function DocumentsPage() {
 
   const load = useCallback(async () => {
     const [f, d] = await Promise.all([
-      api<DocFolder[]>('/api/crud/folders'),
+      api<DocFolder[]>('/api/folders'),
       api<Document[]>('/api/documents'),
     ]);
     if (f) setFolders(f);
@@ -67,7 +67,7 @@ export default function DocumentsPage() {
   }, [load]);
 
   const addFolder = async (f: FormData) => {
-    const ok = await api('/api/crud/folders', {
+    const ok = await api('/api/folders', {
       method: 'POST',
       ok: 'أُنشئ المجلد',
       body: { name: f.get('name'), color: f.get('color') },
@@ -142,7 +142,7 @@ export default function DocumentsPage() {
       description: 'ستُحذف المجلد، وتبقى ملفاته محفوظة بدون تصنيف.',
     });
     if (!ok) return;
-    const res = await api(`/api/crud/folders/${id}`, { method: 'DELETE' });
+    const res = await api(`/api/folders/${id}`, { method: 'DELETE' });
     if (res) {
       if (activeFolder === id) setActiveFolder('all');
       load();

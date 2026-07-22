@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
 import crypto from 'crypto';
-import { prisma } from '@/backend/prisma';
-import { errorResponse } from '@/backend/resources';
-import { ValidationError } from '@/backend/validate';
-import { UPLOAD_DIR } from '@/backend/uploads';
+import { supabase } from '@/backend/supabase';
+import { uploadFile } from '@/backend/backblaze';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const MAX_SIZE = 100 * 1024 * 1024; // 100MB
-
-// أنواع MIME الاحتياطية عندما لا يرسلها المتصفح
+const MAX_SIZE = 100 * 1024 * 1024;
 const MIME_BY_EXT: Record<string, string> = {
   '.pdf': 'application/pdf',
   '.png': 'image/png',
@@ -23,64 +17,84 @@ const MIME_BY_EXT: Record<string, string> = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
-/** GET /api/documents — كل المستندات */
 export async function GET() {
-  try {
-    const rows = await prisma.document.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(rows);
-  } catch (e) {
-    return errorResponse(e);
-  }
+  const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const items = data.map((d: any) => ({
+    id: d.id,
+    name: d.name,
+    fileName: d.file_name,
+    mimeType: d.mime_type,
+    size: d.size,
+    folderId: d.folder_id,
+    createdAt: d.created_at,
+  }));
+  return NextResponse.json(items);
 }
 
-/** POST /api/documents — رفع ملف (multipart/form-data) وحفظه في uploads/ */
+function extFromName(name: string): string {
+  const i = name.lastIndexOf('.');
+  return i >= 0 ? name.slice(i).toLowerCase().replace(/[^.\w]/g, '').slice(0, 10) : '';
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const form = await req.formData().catch(() => {
-      throw new ValidationError('بيانات الرفع غير صالحة');
-    });
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return NextResponse.json({ error: 'بيانات الرفع غير صالحة' }, { status: 400 });
+    }
 
     const file = form.get('file');
     if (!(file instanceof Blob) || !('name' in file)) {
-      throw new ValidationError('لم يتم اختيار ملف');
+      return NextResponse.json({ error: 'لم يتم اختيار ملف' }, { status: 400 });
     }
-    const original = (file as File).name || 'ملف';
-    if (file.size === 0) throw new ValidationError('الملف فارغ');
-    if (file.size > MAX_SIZE) throw new ValidationError('حجم الملف يتجاوز 100MB');
 
-    // اسم معروض مخصص من المستخدم (اختياري) — وإلا الاسم الأصلي
+    const original = (file as File).name || 'ملف';
+    if (file.size === 0) return NextResponse.json({ error: 'الملف فارغ' }, { status: 400 });
+    if (file.size > MAX_SIZE) return NextResponse.json({ error: 'حجم الملف يتجاوز 100MB' }, { status: 400 });
+
     const customRaw = form.get('name');
-    const displayName =
-      typeof customRaw === 'string' && customRaw.trim() !== ''
-        ? customRaw.trim().slice(0, 200)
-        : original.slice(0, 200);
+    const displayName = typeof customRaw === 'string' && customRaw.trim() !== '' ? customRaw.trim().slice(0, 200) : original.slice(0, 200);
 
     const folderIdRaw = form.get('folderId');
     const folderId = typeof folderIdRaw === 'string' && folderIdRaw !== '' ? folderIdRaw : null;
-    if (folderId) {
-      const folder = await prisma.docFolder.findUnique({ where: { id: folderId } });
-      if (!folder) throw new ValidationError('المجلد غير موجود — أعد تحميل الصفحة');
-    }
 
-    // اسم تخزين آمن: uuid + الامتداد الأصلي فقط (لا مسارات ولا رموز)
-    const ext = path.extname(original).toLowerCase().replace(/[^.\w]/g, '').slice(0, 10);
+    const ext = extFromName(original);
     const storedName = crypto.randomUUID() + ext;
+    const mimeType = file.type || MIME_BY_EXT[ext] || 'application/octet-stream';
 
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(path.join(UPLOAD_DIR, storedName), buffer);
+    const b2 = await uploadFile(buffer, storedName, mimeType);
 
-    const doc = await prisma.document.create({
-      data: {
+    const { data, error } = await supabase
+      .from('documents')
+      .insert({
         name: displayName,
-        fileName: storedName,
-        mimeType: file.type || MIME_BY_EXT[ext] || 'application/octet-stream',
+        file_name: storedName,
+        mime_type: mimeType,
         size: file.size,
-        folderId,
-      },
-    });
-    return NextResponse.json(doc, { status: 201 });
+        folder_id: folderId,
+        b2_file_id: b2.fileId,
+        b2_bucket_id: b2.bucketId,
+      })
+      .select()
+      .single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({
+      id: data.id,
+      name: data.name,
+      fileName: data.file_name,
+      mimeType: data.mime_type,
+      size: data.size,
+      folderId: data.folder_id,
+      createdAt: data.created_at,
+    }, { status: 201 });
   } catch (e) {
-    return errorResponse(e);
+    console.error('[DOCUMENTS POST ERROR]', e);
+    return NextResponse.json({ error: 'فشل رفع الملف' }, { status: 500 });
   }
 }
